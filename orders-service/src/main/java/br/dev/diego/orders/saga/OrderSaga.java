@@ -28,8 +28,8 @@ public class OrderSaga {
     @KafkaHandler
     public void handleEvent(OrderCreatedEvent event) {
         ReserveProductCommand reserveProductCommand = new ReserveProductCommand(
-                event.orderId(),
                 event.productId(),
+                event.orderId(),
                 event.productQuantity()
         );
 
