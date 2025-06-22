@@ -3,6 +3,7 @@ package br.dev.diego.products.service.handler;
 import br.dev.diego.core.dto.Product;
 import br.dev.diego.core.dto.commands.ReserveProductCommand;
 import br.dev.diego.core.dto.events.ProductReservedEvent;
+import br.dev.diego.core.dto.events.ProductReservedFailedEvent;
 import br.dev.diego.products.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,13 @@ public class ProductsCommandsHandler {
 
         } catch (Exception e) {
             log.error(e.getLocalizedMessage(), e);
+            ProductReservedFailedEvent productReservedFailedEvent = new ProductReservedFailedEvent(
+                    command.orderId(),
+                    command.productId(),
+                    command.productQuantity()
+            );
+
+            kafkaTemplate.send(productsEventsTopicName, productReservedFailedEvent);
         }
 
     }
