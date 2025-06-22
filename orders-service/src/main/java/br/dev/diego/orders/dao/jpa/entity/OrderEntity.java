@@ -1,6 +1,6 @@
 package br.dev.diego.orders.dao.jpa.entity;
 
-import br.dev.diego.core.types.OrderStatus;
+import br.dev.diego.core.enums.OrderStatus;
 import jakarta.persistence.*;
 
 import java.util.UUID;

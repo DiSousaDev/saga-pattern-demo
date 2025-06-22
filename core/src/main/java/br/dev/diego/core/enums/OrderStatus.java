@@ -1,4 +1,4 @@
-package br.dev.diego.core.types;
+package br.dev.diego.core.enums;
 
 public enum OrderStatus {
     CREATED,

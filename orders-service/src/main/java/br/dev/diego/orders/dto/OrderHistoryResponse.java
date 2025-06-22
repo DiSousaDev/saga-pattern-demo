@@ -1,6 +1,6 @@
 package br.dev.diego.orders.dto;
 
-import br.dev.diego.core.types.OrderStatus;
+import br.dev.diego.core.enums.OrderStatus;
 
 import java.sql.Timestamp;
 import java.util.UUID;

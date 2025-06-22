@@ -2,7 +2,7 @@ package br.dev.diego.orders.service;
 
 import br.dev.diego.core.dto.Order;
 import br.dev.diego.core.dto.events.OrderCreatedEvent;
-import br.dev.diego.core.types.OrderStatus;
+import br.dev.diego.core.enums.OrderStatus;
 import br.dev.diego.orders.dao.jpa.entity.OrderEntity;
 import br.dev.diego.orders.dao.jpa.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Value;
