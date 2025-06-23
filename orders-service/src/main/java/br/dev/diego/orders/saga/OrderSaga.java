@@ -1,21 +1,30 @@
 package br.dev.diego.orders.saga;
 
+import br.dev.diego.core.dto.commands.ProcessPaymentCommand;
 import br.dev.diego.core.dto.commands.ReserveProductCommand;
 import br.dev.diego.core.dto.events.OrderCreatedEvent;
+import br.dev.diego.core.dto.events.ProductReservedEvent;
 import br.dev.diego.core.enums.OrderStatus;
 import br.dev.diego.orders.service.OrderHistoryService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 @Component
-@KafkaListener(topics = {"${orders.events.topic.name}"})
+@KafkaListener(topics = {
+        "${orders.events.topic.name}",
+        "${products.events.topic.name}"
+})
 public class OrderSaga {
 
     @Value("${products.commands.topic.name}")
     private String productsCommandsTopicName;
+
+    @Value("${payments.commands.topic.name}")
+    private String paymentsCommandsTopicName;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final OrderHistoryService orderHistoryService;
@@ -36,6 +45,18 @@ public class OrderSaga {
         kafkaTemplate.send(productsCommandsTopicName, reserveProductCommand);
         orderHistoryService.add(event.orderId(), OrderStatus.CREATED);
 
+    }
+
+    @KafkaHandler
+    public void handleEvent(@Payload ProductReservedEvent event) {
+        ProcessPaymentCommand processPaymentCommand = new ProcessPaymentCommand(
+                event.orderId(),
+                event.productId(),
+                event.productPrice(),
+                event.productQuantity()
+        );
+
+        kafkaTemplate.send(paymentsCommandsTopicName, processPaymentCommand);
     }
 
 }
