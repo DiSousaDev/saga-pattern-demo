@@ -1,8 +1,10 @@
 package br.dev.diego.orders.saga;
 
+import br.dev.diego.core.dto.commands.ApproveOrderCommand;
 import br.dev.diego.core.dto.commands.ProcessPaymentCommand;
 import br.dev.diego.core.dto.commands.ReserveProductCommand;
 import br.dev.diego.core.dto.events.OrderCreatedEvent;
+import br.dev.diego.core.dto.events.PaymentProcessedEvent;
 import br.dev.diego.core.dto.events.ProductReservedEvent;
 import br.dev.diego.core.enums.OrderStatus;
 import br.dev.diego.orders.service.OrderHistoryService;
@@ -16,7 +18,8 @@ import org.springframework.stereotype.Component;
 @Component
 @KafkaListener(topics = {
         "${orders.events.topic.name}",
-        "${products.events.topic.name}"
+        "${products.events.topic.name}",
+        "${payments.events.topic.name}"
 })
 public class OrderSaga {
 
@@ -25,6 +28,9 @@ public class OrderSaga {
 
     @Value("${payments.commands.topic.name}")
     private String paymentsCommandsTopicName;
+
+    @Value("${orders.commands.topic.name}")
+    private String ordersCommandsTopicName;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final OrderHistoryService orderHistoryService;
@@ -57,6 +63,14 @@ public class OrderSaga {
         );
 
         kafkaTemplate.send(paymentsCommandsTopicName, processPaymentCommand);
+    }
+
+    @KafkaHandler
+    public void handleEvent(@Payload PaymentProcessedEvent event) {
+        ApproveOrderCommand approveOrderCommand = new ApproveOrderCommand(
+          event.orderId()
+        );
+        kafkaTemplate.send(ordersCommandsTopicName, approveOrderCommand);
     }
 
 }
