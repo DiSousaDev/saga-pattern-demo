@@ -1,13 +1,17 @@
 package br.dev.diego.orders.service;
 
 import br.dev.diego.core.dto.Order;
+import br.dev.diego.core.dto.events.OrderApprovedEvent;
 import br.dev.diego.core.dto.events.OrderCreatedEvent;
 import br.dev.diego.core.enums.OrderStatus;
 import br.dev.diego.orders.dao.jpa.entity.OrderEntity;
 import br.dev.diego.orders.dao.jpa.repository.OrderRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -47,6 +51,20 @@ public class OrderServiceImpl implements OrderService {
                 entity.getProductId(),
                 entity.getProductQuantity(),
                 entity.getStatus());
+    }
+
+    @Override
+    public void approveOrder(UUID uuid) {
+        OrderEntity entity = orderRepository.findById(uuid).orElseThrow(
+                () -> new EntityNotFoundException("Order not found: " + uuid)
+        );
+        entity.setStatus(OrderStatus.APPROVED);
+        OrderEntity orderSaved = orderRepository.save(entity);
+
+        OrderApprovedEvent orderApprovedEvent = new OrderApprovedEvent(
+                orderSaved.getId()
+        );
+        kafkaTemplate.send(ordersEventsTopicName, orderApprovedEvent);
     }
 
 }
