@@ -3,6 +3,7 @@ package br.dev.diego.orders.saga;
 import br.dev.diego.core.dto.commands.ApproveOrderCommand;
 import br.dev.diego.core.dto.commands.ProcessPaymentCommand;
 import br.dev.diego.core.dto.commands.ReserveProductCommand;
+import br.dev.diego.core.dto.events.OrderApprovedEvent;
 import br.dev.diego.core.dto.events.OrderCreatedEvent;
 import br.dev.diego.core.dto.events.PaymentProcessedEvent;
 import br.dev.diego.core.dto.events.ProductReservedEvent;
@@ -71,6 +72,11 @@ public class OrderSaga {
           event.orderId()
         );
         kafkaTemplate.send(ordersCommandsTopicName, approveOrderCommand);
+    }
+
+    @KafkaHandler
+    public void handleEvent(@Payload OrderApprovedEvent event) {
+        orderHistoryService.add(event.orderId(), OrderStatus.APPROVED);
     }
 
 }
